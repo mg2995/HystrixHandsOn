@@ -25,7 +25,8 @@ public class ManagerApplication {
 
     private static void RunHystrixObservableCommandWithBlocking() {
         SampleObservableCommand observableCommand = new SampleObservableCommand("single sample");
-        Observable<String> observable = observableCommand.construct();
+        // Do edits in the SampleObservableCommand before running, single onNext should be present in the SampleObservableCommand.
+        Observable<String> observable = observableCommand.observe();
 
         try {
             Future<String> futureRes = observable.toBlocking().toFuture();
@@ -37,16 +38,24 @@ public class ManagerApplication {
 
     private static void RunHystrixObservableCommand() throws Exception {
         SampleObservableCommand observableCommand = new SampleObservableCommand("sample");
-        Observable<String> observable = observableCommand.construct();
+
+        // toObservable actually calls the construct method when someone subscribe to it.
+        Observable<String> observable = observableCommand.toObservable();
+
+
+        // subscribes to the Observable that represents the response(s) from the dependency &
+        // returns an Observable that replicates that source Observable. This can be illustrated via timeout
+        //within construct method
+        //Observable<String> observable = observableCommand.observe();
+
         Subscription subs = observable.subscribe(s -> {
                     System.out.println("On Next occured " + s);
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        System.out.println("thread is interrupted");
-                    }
+//                    try {
+//                        Thread.sleep(1000);
+//                    } catch (InterruptedException e) {
+//                        System.out.println("thread is interrupted");
+//                    }
                 }, s -> System.out.println("error occured " + s.getMessage())
-
                 , () -> System.out.println("completed")
         );
         System.out.println(subs.isUnsubscribed());
