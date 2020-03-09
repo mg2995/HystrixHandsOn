@@ -2,6 +2,7 @@ package ObservableHystrixCommands;
 
 
 import com.netflix.hystrix.HystrixCommandGroupKey;
+import com.netflix.hystrix.HystrixCommandProperties;
 import com.netflix.hystrix.HystrixObservableCommand;
 import com.netflix.hystrix.exception.HystrixBadRequestException;
 import rx.Observable;
@@ -12,7 +13,11 @@ public class SampleObservableCommand extends HystrixObservableCommand<String> {
 
     String name ;
     public SampleObservableCommand(String input){
-        super(HystrixCommandGroupKey.Factory.asKey("async sample group"));
+
+        super(Setter.withGroupKey(HystrixCommandGroupKey.Factory.asKey("async sample group"))
+                .andCommandPropertiesDefaults(HystrixCommandProperties.Setter().withExecutionTimeoutEnabled(false)));
+
+        //super(HystrixCommandGroupKey.Factory.asKey("async sample group"));
         this.name = input;
     }
 
@@ -29,7 +34,7 @@ public class SampleObservableCommand extends HystrixObservableCommand<String> {
             public void call(Subscriber<? super String> subscriber) {
                 try{
                     if(!subscriber.isUnsubscribed()){
-                        Thread.sleep(100);
+                        Thread.sleep(1000);
                         subscriber.onNext("Hello dude 1st");
 
                         for(int ind = 0; ind < arr.length;ind++){
@@ -37,7 +42,7 @@ public class SampleObservableCommand extends HystrixObservableCommand<String> {
                             if(ind == 2){
                                 throw new InterruptedException("interruption karenge");
                             }
-                            Thread.sleep(300);
+                            Thread.sleep(1000);
                         }
                         subscriber.onCompleted();
                     }
